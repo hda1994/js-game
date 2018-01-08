@@ -92,7 +92,7 @@ class Actor{
 	
 	
 	isIntersect(newActor){
-		if((newActor.type !== 'actor')/* || (newActor.type !== 'coin') || (newActor.type !== 'player') || (newActor.type !== 'fireball')*/ || (!(newActor instanceof Actor))){
+		if(!(newActor instanceof Actor)){
 
 			throw new Error('Is not an actor');
 		}
@@ -149,7 +149,21 @@ class Actor{
 				 	) 
 			){
 				return true;
-		 	}			
+		 	}	
+			
+			if(
+					(
+						((newActor.left == this.left) && (newActor.right == this.right)) || 
+						((newActor.left == this.right) && (newActor.right == this.left)) 
+					) 
+					&& 
+					(
+					 	((newActor.top == this.bottom) && (newActor.bottom == this.top)) || 
+						((newActor.bottom == this.bottom) && (newActor.top == this.top)) 
+				 	) 
+			){
+				return true;
+		 	}
 //			else{
 				return false;
 //			}
@@ -158,7 +172,7 @@ class Actor{
 }
 
 class Level{
-	constructor(grid, actors){
+	constructor(grid, actors = []){
 		this.actors = actors; // Array of Actor
 		if(grid === undefined){
 			this.grid = [[]];
@@ -200,11 +214,12 @@ class Level{
 		if(!(actor instanceof Actor)){
 			throw new Error('Is not an actor');
 		}
-
+		if(this.actors.length === 1){
+			return undefined;
+		}
 		for (let a = 0; a < this.actors.length; a++){
-
 			if(actor.isIntersect(this.actors[a])){
-				return a;
+				return this.actors[a];
 			}
 		}
 
@@ -215,10 +230,7 @@ class Level{
 		if((pos.type !== 'vector') && (size.type !== 'vector')){
 			throw 'Not a vector';
 		}
-		
 		let actor = new Actor(pos, size);
-		let tmp = this.actorAt(actor);///////////////////////////////
-		if(tmp === undefined){
 			if((actor.left < 0) || (actor.right > this.width) || (actor.top < 0)){
 				return 'wall';
 			}
@@ -242,17 +254,12 @@ class Level{
 					}
 				}
 			}		
-			
-		}
-		else{
-			return tmp;
-		}
 		return undefined;
 	}
 	
 	removeActor(actor){
-
-		//////////////////////////////////////////////////////////////
+		let tmp = this.actors.indexOf(actor);
+		this.actors.splice(tmp,1);
 	}
 	
 	noMoreActors(type){
@@ -384,19 +391,14 @@ class Fireball extends Actor{
 	act(time = 1, lev){
 	
 		let tmp = this.getNextPosition(time);
-		let tmpAct = new Actor(tmp, this.size, this.speed);
-		for(let i in lev.grid){
-			for(let j in lev.grid[i]){
-				if((j === 'lava') || (j === 'wall')){
-					if(tmpAct.isIntersect(new Actor(new Vector(j,i)))){
-						this.handleObstacle();
-					}
-				}
-			}
-		}
 
-		this.pos = tmp;
-		///////////////////////////////////////////
+		if(lev.obstacleAt(tmp, this.size) !== undefined){
+			this.handleObstacle();
+		}
+		else{
+				this.pos = tmp;
+		}
+//	возможно в тесте ошибка, т.к. метод  obstacleAt переопределен и , по условию он не должен возвращать false
 	}
 }
 
