@@ -264,11 +264,9 @@ class Level{
 	
 	noMoreActors(type){
 		
-		for (let i = 0; i < this.grid.length; i++){
-			for (let j = 0; j < this.grid[i].length; j++){
-				if (this.grid[i][j].type === type){
-					return false;
-				}
+		for (let i = 0; i < this.actors.length; i++){
+			if (this.actors[i].type === type){
+				return false;
 			}
 		}
 		
@@ -357,7 +355,10 @@ class LevelParser {
 					(typeof(tmpKey) === 'function') 
 //					&& (tmpKey instanceof Actor)
 				){
-					tmp[k++] = new tmpKey(new Vector(j, i));
+					let h = new tmpKey(new Vector(j, i));
+					if(h instanceof Actor){
+						tmp[k++] = h;
+					}
 				}
 			}
 		}
@@ -469,53 +470,38 @@ const actorsDict = {
 	"|": VerticalFireball,
 	"v": FireRain
 }
-/*
-//let p = new Player(new Vector(3,3));
-
-
-
-//const schema = [
-//  '         ',
-//  '         ',
-//  '    =    ',
-//  '       o ',
-//  '     !xxx',
-//  ' @       ',
-//  'xxx!     ',
-//  '         '
-//];
-//const actorDict = {
-//	'@': Player,
-//  '=': HorizontalFireball,
-//	'o': Coin
-//}
-//const parser = new LevelParser(actorDict);
 //
-//let hh= parser.createActors(schema);
-//console.log(hh);
-//const level = parser.parse(schema);
-//let aaaa = new DOMDisplay(document.body, level);
-
-
-
-//const schema = [
-//  '         ',
-//  '         ',
-//  '    =    ',
-//  '       o ',
-//  '     !xxx',
-//  ' @       ',
-//  'xxx!     ',
-//  '         '
+//let p = new Player(new Vector(3,3));
+//
+//
+//
+//const schemas = [
+////  [
+////    '         ',
+////    '         ',
+////    '    =    ',
+////    '       o ',
+////    '     !xxx',
+////    ' @       ',
+////    'xxx!     ',
+////    '         '
+////  ],
+//  [
+//    '      v  ',
+//    '    =   ',
+//    '  v      ',
+//    '        o',
+//    '        x',
+//    '@   x   | ',
+//    'x        ',
+//    '         '
+//  ]
 //];
 //const actorDict = {
 //  '@': Player,
-//  '=': HorizontalFireball
+//  'v': FireRain
 //}
-//const parser = new LevelParser(actorDict);
-//const level = parser.parse(schema);
-//runLevel(level, DOMDisplay)
-//  .then(status => console.log(`Игрок ${status}`));
-
-*/
-
+//const parser = new LevelParser(actorsDict);
+//runGame(schemas, parser, DOMDisplay)
+//  .then(() => console.log('Вы выиграли приз!'));
+//
