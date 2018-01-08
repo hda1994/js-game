@@ -1,14 +1,6 @@
 'use strict';
 
-const actorsDict = {
-	"x": 'wall',
-	"!": 'lava',
-	"@": (pos) => { return new Player(pos)},
-	"o": (pos) => { return new Coin(pos)},
-	"=": (pos) => { return new HorizontalFireball(pos)},
-	"|": (pos) => { return new VerticalFireball(pos)},
-	"v": (pos) => { return new FireRain(pos)}
-}
+
 function rand(max = 10, min = 0) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
@@ -100,7 +92,8 @@ class Actor{
 	
 	
 	isIntersect(newActor){
-		if(newActor.type !== 'actor'){
+		if((newActor.type !== 'actor')/* || (newActor.type !== 'coin') || (newActor.type !== 'player') || (newActor.type !== 'fireball')*/ || (!(newActor instanceof Actor))){
+
 			throw new Error('Is not an actor');
 		}
 		else{
@@ -135,8 +128,8 @@ class Actor{
 					) 
 					&& 
 					(
-					 	((newActor.top < this.top) && (newActor.bottom > this.bottom)) || 
-						((newActor.bottom < this.top) && (newActor.top > this.bottom))
+					 	((newActor.top <= this.top) && (newActor.bottom >= this.bottom)) || 
+						((newActor.bottom <= this.top) && (newActor.top >= this.bottom))
 				 	) 
 			){
 				return true;
@@ -144,8 +137,8 @@ class Actor{
 
 			if(
 					(
-						((newActor.left < this.left) && (newActor.right > this.right)) || 
-						((newActor.right < this.left) && (newActor.left > this.right))
+						((newActor.left <= this.left) && (newActor.right >= this.right)) || 
+						((newActor.right <= this.left) && (newActor.left >= this.right))
 					) 
 					&& 
 					(
@@ -182,13 +175,16 @@ class Level{
 				}
 			}
 		}
-		///////////////////////////////////////////////////????????????????????
-		this.player = undefined;
+	
+		let rrr = undefined;
 		for(let p in actors){
 			if(p.type === 'player'){
-				this.player = p;
+				rrr = p;
 			}
 		}
+		this.player = rrr;
+		
+		
 		this.status = null;
 		this.finishDelay = 1;
 	}
@@ -204,16 +200,14 @@ class Level{
 		if(!(actor instanceof Actor)){
 			throw new Error('Is not an actor');
 		}
-		if(this.height === 0){
-			return undefined;
-		}
-		/////////////////////////////////////////////////////////////////
-		for (let a in this.actors){
-			if (actor.isIntersect(a)){
+
+		for (let a = 0; a < this.actors.length; a++){
+
+			if(actor.isIntersect(this.actors[a])){
 				return a;
 			}
 		}
-		
+
 		return undefined;
 	}
 	
@@ -231,6 +225,24 @@ class Level{
 			if(actor.bottom > this.height){
 				return 'lava';
 			}
+		
+			for(let i = 0; i < this.grid.length; i++){
+				for(let j = 0; j < this.grid[i].length; j++){
+					if(this.grid[i][j] === 'lava'){
+						if(actor.isIntersect(new Actor(new Vector(j,i)))){
+
+							return 'lava';
+						}
+					}
+					if(this.grid[i][j] === 'wall'){
+						if(actor.isIntersect(new Actor(new Vector(j,i)))){
+
+							return 'wall';
+						}
+					}
+				}
+			}		
+			
 		}
 		else{
 			return tmp;
@@ -239,11 +251,7 @@ class Level{
 	}
 	
 	removeActor(actor){
-//		for(let a in this.actors){
-//			if(a == actor){
-//				a = null;
-//			}
-//		}
+
 		//////////////////////////////////////////////////////////////
 	}
 	
@@ -279,6 +287,7 @@ class Level{
 		return;//////////////////////////////////////?????????????????????????????
 	}
 }
+
 
 class LevelParser {
 	constructor(dict){
@@ -328,12 +337,20 @@ class LevelParser {
 	
 	createActors(strings){////////////////////////////////////////////////
 		let tmp = [];
+		if(this.dict === undefined){
+			return tmp;
+		}
 		let k = 0;
 		for(let i = 0; i < strings.length; i++){
 			for(let j = 0; j < strings[i].length; j++){
 				let tmpKey = this.actorFromSymbol(strings[i][j]);
-				if((tmpKey !== undefined) && (typeof(tmpKey) === 'function') && (tmpKey instanceof Actor)){
-					tmp[k++] = this.actorFromSymbol(strings[i][j])(new Vector(i, j));// i j     or j i ?
+
+				if(
+					(tmpKey !== undefined) && 
+					(typeof(tmpKey) === 'function') 
+//					&& (tmpKey instanceof Actor)
+				){
+					tmp[k++] = new tmpKey(new Vector(j, i));
 				}
 			}
 		}
@@ -365,13 +382,20 @@ class Fireball extends Actor{
 	}
 	
 	act(time = 1, lev){
-//		let tmp = this.getNextPosition(time);
-//		let is = false;
-//		for(let i = 0; i < lev.grid.length; i++){
-//			for(let j = 0; j < lev.grid[i].length; j++){
-//				if(lev.grid[i][j])
-//			}
-//		}
+	
+		let tmp = this.getNextPosition(time);
+		let tmpAct = new Actor(tmp, this.size, this.speed);
+		for(let i in lev.grid){
+			for(let j in lev.grid[i]){
+				if((j === 'lava') || (j === 'wall')){
+					if(tmpAct.isIntersect(new Actor(new Vector(j,i)))){
+						this.handleObstacle();
+					}
+				}
+			}
+		}
+
+		this.pos = tmp;
 		///////////////////////////////////////////
 	}
 }
@@ -418,12 +442,12 @@ class Coin extends Actor{
 		return new Vector(0, Math.sin(this.spring) * this.springDist);
 	}
 	getNextPosition(time = 1){
-		this.pos = this.pos.plus(this.getSpringVector());
 		this.updateSpring(time);
-		return this.pos;
+		let tmp = this.pos.plus(this.getSpringVector());
+		return tmp;
 	}
-	act(time){
-		///////////////////////////////////////////////////////////////////////////////////
+	act(time = 1){
+		this.pos = this.getNextPosition(time);
 	}
 }
 
@@ -435,3 +459,61 @@ class Player extends Actor{
 		return 'player';
 	}
 }
+
+const actorsDict = {
+	"@": Player,
+	"o": Coin,
+	"=": HorizontalFireball,
+	"|": VerticalFireball,
+	"v": FireRain
+}
+/*
+//let p = new Player(new Vector(3,3));
+
+
+
+//const schema = [
+//  '         ',
+//  '         ',
+//  '    =    ',
+//  '       o ',
+//  '     !xxx',
+//  ' @       ',
+//  'xxx!     ',
+//  '         '
+//];
+//const actorDict = {
+//	'@': Player,
+//  '=': HorizontalFireball,
+//	'o': Coin
+//}
+//const parser = new LevelParser(actorDict);
+//
+//let hh= parser.createActors(schema);
+//console.log(hh);
+//const level = parser.parse(schema);
+//let aaaa = new DOMDisplay(document.body, level);
+
+
+
+//const schema = [
+//  '         ',
+//  '         ',
+//  '    =    ',
+//  '       o ',
+//  '     !xxx',
+//  ' @       ',
+//  'xxx!     ',
+//  '         '
+//];
+//const actorDict = {
+//  '@': Player,
+//  '=': HorizontalFireball
+//}
+//const parser = new LevelParser(actorDict);
+//const level = parser.parse(schema);
+//runLevel(level, DOMDisplay)
+//  .then(status => console.log(`Игрок ${status}`));
+
+*/
+
