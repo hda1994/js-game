@@ -474,34 +474,33 @@ const actorsDict = {
 //let p = new Player(new Vector(3,3));
 //
 //
-//
-//const schemas = [
-////  [
-////    '         ',
-////    '         ',
-////    '    =    ',
-////    '       o ',
-////    '     !xxx',
-////    ' @       ',
-////    'xxx!     ',
-////    '         '
-////  ],
-//  [
-//    '      v  ',
-//    '    =   ',
-//    '  v      ',
-//    '        o',
-//    '        x',
-//    '@   x   | ',
-//    'x        ',
-//    '         '
-//  ]
-//];
-//const actorDict = {
-//  '@': Player,
-//  'v': FireRain
-//}
-//const parser = new LevelParser(actorsDict);
-//runGame(schemas, parser, DOMDisplay)
-//  .then(() => console.log('Вы выиграли приз!'));
-//
+
+const schemas = [
+  [
+    '         ',
+    '         ',
+    '    =    ',
+    '         ',
+    '     !xxx',
+    ' @       ',
+    'xxx!     ',
+    '         '
+  ],
+  [
+    '         ',
+    '         ',
+    '         ',
+    '        o',
+    '        x',
+    '@   x    ',
+    'x        ',
+    '         '
+  ]
+];
+const actorDict = {
+  '@': Player,
+  'v': FireRain
+}
+const parser = new LevelParser(actorsDict);
+runGame(schemas, parser, DOMDisplay)
+  .then(() => console.log('Вы выиграли приз!'));
