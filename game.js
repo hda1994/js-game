@@ -191,9 +191,9 @@ class Level{
 		}
 	
 		let rrr = undefined;
-		for(let p in actors){
-			if(p.type === 'player'){
-				rrr = p;
+		for (let i = 0; i < this.actors.length; i++){
+			if (this.actors[i].type === 'player'){
+				rrr = this.actors[i];
 			}
 		}
 		this.player = rrr;
